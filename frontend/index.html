@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yt-dlp Web Studio - Media Downloader & Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-icon">🚀</div>
+                <div class="brand-text">
+                    <h2>yt-dlp Studio</h2>
+                    <span class="version-tag" id="ytdlp-ver">v2026.x</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-tab="tab-download">
+                    <span class="nav-icon">📥</span>
+                    <span>ดาวน์โหลด (Download)</span>
+                </button>
+                <button class="nav-btn" data-tab="tab-queue">
+                    <span class="nav-icon">⚡</span>
+                    <span>คิวดาวน์โหลด (Queue)</span>
+                    <span class="badge" id="queue-count">0</span>
+                </button>
+                <button class="nav-btn" data-tab="tab-files">
+                    <span class="nav-icon">📁</span>
+                    <span>คลังไฟล์ (File Manager)</span>
+                </button>
+                <button class="nav-btn" data-tab="tab-settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span>สถานะระบบ (GPU & Settings)</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="gpu-badge" id="sidebar-gpu-status">
+                    <span class="status-dot"></span>
+                    <span id="sidebar-gpu-text">กำลังตรวจสอบ GPU...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="top-bar">
+                <div class="header-title">
+                    <h1 id="page-title">ดาวน์โหลดสื่อ & วิดีโอ (Downloader Studio)</h1>
+                    <p class="subtitle">รองรับ YouTube, TikTok, X, Bilibili, Douyin, IG, FB 1,700+ เว็บทั่วโลก</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-open-explorer">
+                        <span>📂 เปิดโฟลเดอร์หลักในเครื่อง</span>
+                    </button>
+                    <button class="btn btn-accent" id="btn-update-ytdlp">
+                        <span>Update yt-dlp</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Tab 1: Download Form -->
+            <section class="tab-content active" id="tab-download">
+                <!-- URL Input Hero Box -->
+                <div class="card hero-card">
+                    <div class="url-input-group">
+                        <input type="text" id="url-input" placeholder="วางลิงก์วิดีโอ (YouTube, TikTok, Douyin, Bilibili, X, ฯลฯ)..." autocomplete="off">
+                        <button class="btn btn-primary" id="btn-analyze">
+                            <span>🔍 วิเคราะห์ลิงก์</span>
+                        </button>
+                    </div>
+
+                    <!-- Platform Tags Grid -->
+                    <div class="platform-tags">
+                        <span class="p-tag">YouTube</span>
+                        <span class="p-tag">TikTok</span>
+                        <span class="p-tag">Douyin</span>
+                        <span class="p-tag">Bilibili</span>
+                        <span class="p-tag">X (Twitter)</span>
+                        <span class="p-tag">Facebook</span>
+                        <span class="p-tag">Instagram</span>
+                        <span class="p-tag">Reddit</span>
+                        <span class="p-tag">Twitch</span>
+                        <span class="p-tag">+1,700 เว็บ</span>
+                    </div>
+                </div>
+
+                <!-- Duplicate Alert Banner (Hidden by default) -->
+                <div class="duplicate-alert-box hidden" id="duplicate-alert-box">
+                    <div class="duplicate-content">
+                        <span>⚠️ <strong>ตรวจพบไฟล์ซ้ำ!</strong> คลิปนี้เคยดาวน์โหลดไว้แล้วในเครื่อง</span>
+                        <button class="btn btn-sm btn-secondary" id="btn-open-dup-folder">📂 เปิดโฟลเดอร์ไฟล์ที่มีอยู่แล้ว</button>
+                    </div>
+                </div>
+
+                <!-- Video Preview Card (Hidden until analyze) -->
+                <div class="card preview-card hidden" id="video-preview-card">
+                    <div class="preview-layout">
+                        <div class="preview-thumb-box">
+                            <img id="prev-thumb" src="" alt="Thumbnail">
+                            <span class="duration-badge" id="prev-duration">00:00</span>
+                        </div>
+                        <div class="preview-info">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                                <h3 id="prev-title">ชื่อคลิปวิดีโอ...</h3>
+                                <button class="btn btn-sm btn-secondary" id="btn-open-title-folder">📂 เปิดโฟลเดอร์คลิปนี้</button>
+                            </div>
+                            <p class="uploader-name" id="prev-uploader">ช่อง/ผู้สร้าง: -</p>
+                            <div class="subs-available" id="prev-subs-tags">
+                                <!-- Subtitle badges populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hashtags & Captions Studio Section -->
+                    <div class="caption-studio-box" id="caption-studio-section">
+                        <div class="caption-studio-header">
+                            <h4>🏷️ Hashtags & Captions Studio (สำหรับนำไปตัดต่อ / ลงโซเชียล)</h4>
+                            <button class="btn btn-sm btn-secondary" id="btn-copy-hashtags">📋 คัดลอกแฮชแท็กทั้งหมด</button>
+                        </div>
+                        <div class="hashtags-cloud" id="hashtags-cloud">
+                            <!-- Dynamic Hashtag Pills -->
+                        </div>
+                        
+                        <div class="caption-tabs">
+                            <button class="cap-tab-btn active" data-cap="short">แคปชันสั้น (Short)</button>
+                            <button class="cap-tab-btn" data-cap="full">แคปชันเต็ม (Full)</button>
+                            <button class="cap-tab-btn" data-cap="editor">โน้ตสำหรับตัดต่อ (Editor Note)</button>
+                            <button class="btn btn-sm btn-accent" id="btn-copy-caption" style="margin-left: auto;">📋 คัดลอกแคปชันนี้</button>
+                        </div>
+                        <textarea class="caption-textarea" id="caption-textarea" readonly rows="4"></textarea>
+                    </div>
+                </div>
+
+                <!-- Presets Bar -->
+                <div class="card presets-card">
+                    <h3>⚡ เลือกโหมดด่วน (Quick Presets)</h3>
+                    <div class="presets-grid" id="presets-container">
+                        <!-- Presets dynamically loaded -->
+                    </div>
+                </div>
+
+                <!-- Custom Advanced Options Accordion -->
+                <div class="card custom-options-card">
+                    <div class="card-header-toggle" id="toggle-custom-opts">
+                        <h3>🛠️ ปรับแต่งตัวเลือกเพิ่มเติม (Custom Options)</h3>
+                        <span class="arrow-icon">▼</span>
+                    </div>
+
+                    <div class="custom-opts-body hidden" id="custom-opts-body">
+                        <div class="form-grid">
+                            <!-- Format & Resolution -->
+                            <div class="form-group full-width">
+                                <label for="opt-format">Custom yt-dlp format string:</label>
+                                <input type="text" id="opt-format" placeholder="Leave blank to use preset/default format">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="opt-resolution">????????????????? (Resolution):</label>
+                                <select id="opt-resolution">
+                                    <option value="best" selected>?????? (Best Available / 4K / 2K)</option>
+                                    <option value="2160">4K (2160p)</option>
+                                    <option value="1440">2K (1440p)</option>
+                                    <option value="1080">Full HD (1080p)</option>
+                                    <option value="720">HD (720p)</option>
+                                    <option value="480">SD (480p)</option>
+                                </select>
+                            </div>
+                            <!-- Extract Audio Only -->
+                            <div class="form-group">
+                                <label for="opt-audio-format">แยกเฉพาะไฟล์เสียง (Extract Audio):</label>
+                                <div class="checkbox-group-inline">
+                                    <input type="checkbox" id="chk-audio-only">
+                                    <label for="chk-audio-only">โหลดเฉพาะเสียง</label>
+                                    <select id="opt-audio-format" disabled>
+                                        <option value="mp3" selected>MP3</option>
+                                        <option value="m4a">M4A</option>
+                                        <option value="wav">WAV (Uncompressed)</option>
+                                        <option value="flac">FLAC (Lossless)</option>
+                                        <option value="aac">AAC</option>
+                                        <option value="opus">Opus</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Subtitles & Metadata -->
+                            <div class="form-group full-width">
+                                <label>Use AI Whisper transcription when no captions are available</label>
+                                <div class="checkbox-group-inline" style="margin-bottom: 8px;">
+                                    <input type="checkbox" id="chk-write-subs" checked>
+                                    <label for="chk-write-subs">Write subtitles when available</label>
+                                </div>
+                                <div class="checkbox-group-inline" style="margin-bottom: 8px;">
+                                    <input type="checkbox" id="chk-use-whisper">
+                                </div>
+                                <div>
+                                    <label for="opt-whisper-lang" style="display: block; margin-bottom: 6px;">Whisper language</label>
+                                    <select id="opt-whisper-lang" style="max-width: 220px;">
+                                        <option value="auto" selected>Auto detect</option>
+                                        <option value="th">Thai</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Time Section & SponsorBlock -->
+                            <div class="form-group">
+                                <label for="opt-time-section">ตัดวิดีโอเฉพาะช่วง (--download-sections):</label>
+                                <input type="text" id="opt-time-section" placeholder="เช่น 01:30-04:00 (ระบุ นาที:วินาที)">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="chk-sponsorblock">ตัดโฆษณาด้วย SponsorBlock:</label>
+                                <div class="checkbox-group-inline">
+                                    <input type="checkbox" id="chk-sponsorblock" checked>
+                                    <label for="chk-sponsorblock">ตัดช่วงสปอนเซอร์/Intro/Outro อัตโนมัติ</label>
+                                </div>
+                            </div>
+
+                            <!-- Cookie Selection -->
+                            <div class="form-group full-width">
+                                <label>Cookies & Authentication (สำหรับ Douyin/Bilibili/คลิปเฉพาะสมาชิก):</label>
+                                <div class="cookie-select-row">
+                                    <select id="opt-cookie-type">
+                                        <option value="none" selected>ไม่ใช้ Cookies</option>
+                                        <option value="browser">ดึงจาก เบราว์เซอร์ ในเครื่อง</option>
+                                        <option value="file">ใช้ไฟล์ cookies.txt ที่อัปโหลด</option>
+                                    </select>
+                                    <select id="opt-cookie-val" class="hidden">
+                                        <!-- Dynamically populated -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Action Button -->
+                <div class="action-bar">
+                    <button class="btn btn-download-huge" id="btn-start-download">
+                        <span>🚀 เริ่มดาวน์โหลดทันที</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Tab 2: Queue & Progress -->
+            <section class="tab-content" id="tab-queue">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>รายการที่กำลังดาวน์โหลด & คิวงาน</h3>
+                        <button class="btn btn-sm btn-secondary" id="btn-clear-completed">ล้างรายการที่เสร็จแล้ว</button>
+                    </div>
+
+                    <div class="tasks-list" id="tasks-container">
+                        <!-- Dynamic download tasks rendered here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">📥</div>
+                            <p>ยังไม่มีรายการดาวน์โหลดขณะนี้</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 3: File Manager -->
+            <section class="tab-content" id="tab-files">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📁 คลังไฟล์ที่ดาวน์โหลดแล้ว (File Manager)</h3>
+                        <button class="btn btn-sm btn-primary" id="btn-refresh-files">🔄 รีเฟรชรายการไฟล์</button>
+                    </div>
+
+                    <div class="file-browser-layout">
+                        <!-- Files Grid/List -->
+                        <div class="files-table-container">
+                            <table class="files-table">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่อไฟล์</th>
+                                        <th>ประเภท</th>
+                                        <th>ขนาด</th>
+                                        <th>การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="files-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Embedded Player Modal/Preview -->
+                        <div class="player-box hidden" id="player-box">
+                            <div class="player-header">
+                                <h4 id="player-title">ชื่อไฟล์สื่อ...</h4>
+                                <button class="btn-close" id="btn-close-player">✖</button>
+                            </div>
+                            <div class="player-media-container" id="player-container">
+                                <!-- <video> or <audio> inserted dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 4: GPU Status & System Settings -->
+            <section class="tab-content" id="tab-settings">
+                <div class="card">
+                    <h3>⚡ สถานะฮาร์ดแวร์ & GPU Acceleration</h3>
+                    <div class="gpu-details-grid" id="gpu-details-container">
+                        <!-- GPU Status loaded dynamically -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🍪 จัดการ Cookies.txt (อัปโหลดไฟล์ Cookies)</h3>
+                    <div class="cookie-upload-box">
+                        <input type="file" id="cookie-file-input" accept=".txt,.cookies">
+                        <button class="btn btn-secondary" id="btn-upload-cookie">อัปโหลด cookies.txt</button>
+                    </div>
+                    <div style="margin-top: 12px; padding: 12px 14px; border: 1px solid rgba(99, 102, 241, 0.28); border-radius: 10px; background: rgba(15, 23, 42, 0.55); color: #dbeafe; font-size: 13px; line-height: 1.7;">
+                        <strong>??????? error Fresh cookies ?????? Douyin</strong>
+                        <ol style="margin: 8px 0 0 18px; padding: 0;">
+                            <li>??????? Douyin ?? browser ?????????????</li>
+                            <li>export cookies ???????????? <code>cookies.txt</code> ??? Netscape/Mozilla</li>
+                            <li>????????????????????? ?????????????????? dropdown Cookies</li>
+                            <li>?????? fail ??? export ???????????? ????? cookies ??????????????</li>
+                        </ol>
+                    </div>
+                    <div class="uploaded-cookies-list" id="uploaded-cookies-list">
+                        <!-- List uploaded cookies -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="js/websocket.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
