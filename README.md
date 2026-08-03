@@ -32,6 +32,17 @@
 
 ---
 
+
+## Quick Start
+```powershell
+git clone https://github.com/thanonhari/ytdlpatrrudownload.git
+cd ytdlpatrrudownload
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r backend/requirements.txt
+python run.py
+```
+
 ## 🛠️ วิธีการเปิดใช้งาน (How to Run)
 
 ### วิธีที่ 1: ดับเบิลคลิกไฟล์ (Windows)
