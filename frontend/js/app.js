@@ -650,7 +650,7 @@ ${formatHelp}`;
     }
 
     // Initialize WebSocket Connection
-    new DownloadWebSocket(handleWebSocketProgressUpdate, handleWebSocketTasksInit);
+    window.downloadWebSocket = new DownloadWebSocket(handleWebSocketProgressUpdate, handleWebSocketTasksInit);
 
     // 8. File Manager
     async function loadFiles() {

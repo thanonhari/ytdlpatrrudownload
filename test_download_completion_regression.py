@@ -199,6 +199,49 @@ class DownloadCompletionRegressionTest(unittest.TestCase):
         self.assertIn("cookiesfrombrowser", attempts[0])
         self.assertEqual(attempts[0]["cookiesfrombrowser"][0], "chrome")
 
+    def test_run_download_task_retries_without_subtitles_after_429(self):
+        attempts = []
+
+        with tempfile.TemporaryDirectory(dir=r"D:\tmp") as tmpdir:
+            tmp_root = Path(tmpdir)
+            media_path = tmp_root / "downloads" / "YouTube" / "channel" / "Demo Clip [abc123].mp4"
+            media_path.parent.mkdir(parents=True, exist_ok=True)
+            media_path.write_bytes(b"fake media")
+
+            old_downloader_base = downloader.BASE_DOWNLOADS_DIR
+            old_file_manager_base = file_manager.BASE_DOWNLOADS_DIR
+            downloader.BASE_DOWNLOADS_DIR = str(tmp_root / "downloads")
+            file_manager.BASE_DOWNLOADS_DIR = str(tmp_root / "downloads")
+            try:
+                task = downloader.DownloadTask("task-429", "https://example.com/watch?v=abc123", {"write_subs": True})
+                task.filepath = str(tmp_root / "staging" / "temp.part")
+
+                def fake_extract(url, ydl_opts, cookie_type, cookie_val, download):
+                    attempts.append(dict(ydl_opts))
+                    if len(attempts) == 1:
+                        raise RuntimeError("Unable to download video subtitles for 'aa': HTTP Error 429: Too Many Requests")
+                    self.assertNotIn("writesubtitles", ydl_opts)
+                    self.assertNotIn("writeautomaticsub", ydl_opts)
+                    return {
+                        "id": "abc123",
+                        "title": "Demo Clip",
+                        "uploader": "channel",
+                        "extractor_key": "YouTube",
+                    }
+
+                with patch.object(downloader, "_run_yt_dlp_with_cookie_fallback", side_effect=fake_extract):
+                    downloader.run_download_task(task)
+
+                self.assertEqual(task.status, "completed")
+                self.assertEqual(len(attempts), 2)
+                self.assertIn("writesubtitles", attempts[0])
+                self.assertNotIn("writesubtitles", attempts[1])
+                self.assertEqual(Path(task.filepath).resolve(), media_path.resolve())
+                self.assertTrue(media_path.with_suffix(".caption.txt").exists())
+            finally:
+                downloader.BASE_DOWNLOADS_DIR = old_downloader_base
+                file_manager.BASE_DOWNLOADS_DIR = old_file_manager_base
+
     def test_run_download_task_selected_browser_falls_back_without_other_browsers(self):
         attempts = []
 

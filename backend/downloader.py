@@ -21,6 +21,11 @@ def _format_cookie_error(exc: Exception, cookie_source_type: Optional[str] = Non
     return message
 
 
+
+def _is_retryable_subtitle_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return "unable to download video subtitles" in message or ("429" in message and "subtitle" in message)
+
 def _run_yt_dlp_with_cookie_fallback(
     url: str,
     ydl_opts: Dict[str, Any],
@@ -289,7 +294,19 @@ def run_download_task(task: DownloadTask):
         if task.progress_callback:
             task.progress_callback(task.to_dict())
 
-        info = _run_yt_dlp_with_cookie_fallback(task.url, ydl_opts, cookie_type, cookie_val, download=True)
+        try:
+            info = _run_yt_dlp_with_cookie_fallback(task.url, ydl_opts, cookie_type, cookie_val, download=True)
+        except Exception as exc:
+            if opts.get("write_subs") and _is_retryable_subtitle_error(exc):
+                logger.warning("Subtitle download failed with %s; retrying once without subtitle capture: %s", type(exc).__name__, exc)
+                fallback_opts = dict(ydl_opts)
+                fallback_opts.pop("writesubtitles", None)
+                fallback_opts.pop("writeautomaticsub", None)
+                fallback_opts.pop("subtitleslangs", None)
+                fallback_opts.pop("subtitlesformat", None)
+                info = _run_yt_dlp_with_cookie_fallback(task.url, fallback_opts, cookie_type, cookie_val, download=True)
+            else:
+                raise
         task.title = info.get("title", "Downloaded Video")
 
         # Resolve the final media file path after yt-dlp and post-processing finish.

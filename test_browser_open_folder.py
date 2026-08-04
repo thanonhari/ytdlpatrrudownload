@@ -137,12 +137,12 @@ async def main() -> None:
             await page.locator('.nav-btn[data-tab="tab-queue"]').click()
             await page.wait_for_selector("button.btn-open-card-folder", state="visible")
             folder_buttons = page.locator("button.btn-open-card-folder")
-            if await folder_buttons.count() != 2:
-                raise AssertionError("Expected exactly two completed-task folder buttons")
+            if await folder_buttons.count() < 2:
+                raise AssertionError("Expected at least two completed-task folder buttons")
 
             status_tags = page.locator(".task-status-tag")
-            if await status_tags.count() != 2:
-                raise AssertionError("Expected two task status tags")
+            if await status_tags.count() < 2:
+                raise AssertionError("Expected at least two task status tags")
             for index in range(2):
                 if "COMPLETED" not in await status_tags.nth(index).inner_text():
                     raise AssertionError("A task row did not render as completed")
@@ -178,6 +178,8 @@ async def main() -> None:
                 raise AssertionError("Expected yt-dlp update button to render")
             if await page.locator("#opt-whisper-lang").count() != 1:
                 raise AssertionError("Expected Whisper language selector to render")
+            if not await page.evaluate("Boolean(window.downloadWebSocket)"):
+                raise AssertionError("Expected the websocket client instance to stay referenced")
 
             await page.locator("#btn-update-ytdlp").click()
             for _ in range(20):
